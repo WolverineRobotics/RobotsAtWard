@@ -1,0 +1,60 @@
+# PID Controller Constants
+DRIVE_KP = 0
+DRIVE_KI = 0
+DRIVE_KD = 0
+
+STEER_KP = 0
+STEER_KI = 0
+STEER_KD = 0
+
+# Physical Constants
+WHEEL_RADIUS = 1
+
+# Module Translation Constants
+X_MODULE_TRANSLATION = 1
+Y_MODULE_TRANSLATION = 1
+
+# Drive Motor CAN IDs
+FRONT_LEFT_DRIVE_CAN_ID = 1
+FRONT_RIGHT_DRIVE_CAN_ID = 2
+BACK_LEFT_DRIVE_CAN_ID = 3
+BACK_RIGHT_DRIVE_CAN_ID = 4
+
+# Steering Motor CAN IDs
+FRONT_LEFT_STEER_CAN_ID = 5
+FRONT_RIGHT_STEER_CAN_ID = 6
+BACK_LEFT_STEER_CAN_ID = 7
+BACK_RIGHT_STEER_CAN_ID = 8
+
+# Encoder IDs
+FRONT_LEFT_ENCODER_ID = 0
+FRONT_RIGHT_ENCODER_ID = 1
+BACK_LEFT_ENCODER_ID = 2
+BACK_RIGHT_ENCODER_ID = 3
+
+# Encoder Offsets
+FRONT_LEFT_ENCODER_OFFSET = 0
+FRONT_RIGHT_ENCODER_OFFSET = 0
+BACK_LEFT_ENCODER_OFFSET = 0
+BACK_RIGHT_ENCODER_OFFSET = 0
+
+GYRO_CAN_ID = 9
+
+# Drive Motor MUJOCO IDs
+DRIVE_MUJOCO_IDS = [
+    1, # front left
+    2, # front right
+    3, # back left
+    4  # back right
+]
+
+# Drive Motor MUJOCO IDs
+STEER_MUJOCO_IDS = [
+    1, # front left
+    2, # front right
+    3, # back left
+    4  # back right
+]
+
+GYRO_MUJOCO_ID = 9
+

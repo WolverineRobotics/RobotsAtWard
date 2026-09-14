@@ -1,0 +1,11 @@
+{
+  "output_format": "mujoco",
+  "url": "https://cad.onshape.com/documents/71ad5d060a26245af3afa771/w/473736f62c13999ca5d0b7db/e/94afd53c38f73c8c3db954c6?renderMode=0&uiState=6aa2559615577f7873e2c93c",
+  "joint_properties": {
+        "default": {
+          "type": "velocity",
+          "kv": 1
+        }
+  }
+
+}
