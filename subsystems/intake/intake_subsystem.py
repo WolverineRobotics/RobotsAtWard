@@ -51,7 +51,8 @@ class IntakeSubsystem(Subsystem):
             lambda *args: None,
             lambda: self.pivot_intake(),
             lambda *args: None,
-            lambda: self.at_bumpers()
+            lambda: self.at_bumpers(),
+            self
         )
 
     def spin_rollers(self) -> None:
