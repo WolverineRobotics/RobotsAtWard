@@ -1,4 +1,5 @@
 import commands2
+from commands2.button import CommandXboxController
 from commands2 import CommandScheduler
 from subsystems.drive.drive_subsystem import DriveSubsystem
 from subsystems.drive.swerve_module import SwerveModule
@@ -11,6 +12,7 @@ from wolverine_sim.rev.spark_max_simulation import spark_max_sim
 from wolverine_sim.phoenix6.pigeon2_simulation import pigeon2_sim
 from wolverine_sim.wpilib.analog_encoder_simulation import analog_encoder_sim
 from wolverine_sim.rev.relative_encoder_simulation import relative_encoder_sim
+from typing import Callable
 import subsystems.drive.drive_constants as drive_constants
 import wpilib
 
@@ -68,12 +70,16 @@ class Robot(wpilib.TimedRobot):
         )
 
 
+        CommandXboxController.getRightX = self.deadband_wrapper(CommandXboxController.getRightX)
+        CommandXboxController.getRightY = self.deadband_wrapper(CommandXboxController.getRightY)
+        CommandXboxController.getLeftX = self.deadband_wrapper(CommandXboxController.getLeftX)
+        CommandXboxController.getLeftY = self.deadband_wrapper(CommandXboxController.getLeftY)
 
         # Creating the drive controller on port 0 which is our team's standard
-        self.drive_controller = commands2.button.CommandXboxController(0)
+        self.drive_controller =CommandXboxController(0)
 
         # Creating the operator controller on port 1 which is our team's standard
-        self.op_controller = commands2.button.CommandXboxController(1)
+        self.op_controller = CommandXboxController(1)
 
         # Configuring the controls for the robot
         self.configure_bindings()
@@ -108,7 +114,15 @@ class Robot(wpilib.TimedRobot):
             self.intake_subsystem.get_pivot_command()
         )
 
+    def deadband_wrapper(self, func: Callable[[CommandXboxController], float]):
 
+        def deadband():
+            if func() > 0.1:
+                return func()
+            else:
+                return 0
+
+        return deadband
 
     def robotPeriodic(self) -> None:
         CommandScheduler.getInstance().run()
