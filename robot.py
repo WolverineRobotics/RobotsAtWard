@@ -4,6 +4,8 @@ from subsystems.drive.drive_subsystem import DriveSubsystem
 from subsystems.drive.swerve_module import SwerveModule
 from subsystems.intake import intake_constants
 from subsystems.intake.intake_subsystem import IntakeSubsystem
+from subsystems.shooter.shooter_subsystem import ShooterSubsystem
+from subsystems.shooter import shooter_constansts
 from wolverine_sim.robot_simulation import rs
 from wolverine_sim.rev.spark_max_simulation import spark_max_sim
 from wolverine_sim.phoenix6.pigeon2_simulation import pigeon2_sim
@@ -57,6 +59,15 @@ class Robot(wpilib.TimedRobot):
             intake_constants.RIGHT_PIVOT_INVERTED,
             intake_constants.LEFT_PIVOT_INVERTED
         )
+
+        self.shooter_subsystem = ShooterSubsystem(
+            shooter_constansts.FLYWHEEL_ID,
+            shooter_constansts.INDEXER_ID,
+            shooter_constansts.FLYWHEEL_INVERTED,
+            shooter_constansts.INDEXER_INVERTED
+        )
+
+
 
         # Creating the drive controller on port 0 which is our team's standard
         self.drive_controller = commands2.button.CommandXboxController(0)

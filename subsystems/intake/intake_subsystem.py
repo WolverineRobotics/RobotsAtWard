@@ -16,11 +16,11 @@ class IntakeSubsystem(Subsystem):
     ):
         self.right_pivot_motor = rev.SparkMax(right_pivot_id, rev.SparkLowLevel.MotorType.kBrushless)
         self.left_pivot_motor = rev.SparkMax(left_pivot_id, rev.SparkLowLevel.MotorType.kBrushless)
-        self.roller_motor = rev.SparkMax(roller_id, rev.SparkLowLevel.MotorType.kBrushless)
+        self.roller_motor = rev.SparkFlex(roller_id, rev.SparkLowLevel.MotorType.kBrushless)
 
         right_pivot_config = rev.SparkMaxConfig()
         left_pivot_config = rev.SparkMaxConfig()
-        roller_config = rev.SparkMaxConfig()
+        roller_config = rev.SparkFlexConfig()
 
         right_pivot_config.setIdleMode(rev.SparkBaseConfig.IdleMode.kBrake)
         right_pivot_config.inverted(right_pivot_inv)
