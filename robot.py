@@ -1,12 +1,18 @@
 import commands2
+from commands2.button import CommandXboxController
 from commands2 import CommandScheduler
 from subsystems.drive.drive_subsystem import DriveSubsystem
 from subsystems.drive.swerve_module import SwerveModule
+from subsystems.intake import intake_constants
+from subsystems.intake.intake_subsystem import IntakeSubsystem
+from subsystems.shooter.shooter_subsystem import ShooterSubsystem
+from subsystems.shooter import shooter_constansts
 from wolverine_sim.robot_simulation import rs
 from wolverine_sim.rev.spark_max_simulation import spark_max_sim
 from wolverine_sim.phoenix6.pigeon2_simulation import pigeon2_sim
 from wolverine_sim.wpilib.analog_encoder_simulation import analog_encoder_sim
 from wolverine_sim.rev.relative_encoder_simulation import relative_encoder_sim
+from typing import Callable
 import subsystems.drive.drive_constants as drive_constants
 import wpilib
 
@@ -47,18 +53,37 @@ class Robot(wpilib.TimedRobot):
 
             drive_constants.GYRO_CAN_ID
         )
-        # Creating the drive controller on port 0 which is our teams standard
-        self.drive_controller = commands2.button.CommandXboxController(0)
 
-        # Setting the default command of the drive subsystem to be the drive command
-        # and passing the methods from the drive controller as parameters
-        self.drive_subsystem.setDefaultCommand(
-            self.drive_subsystem.get_drive_command(
-                self.drive_controller.getLeftY,
-                self.drive_controller.getLeftX,
-                self.drive_controller.getRightX
-            )
+        self.intake_subsystem = IntakeSubsystem(
+            intake_constants.RIGHT_PIVOT_ID,
+            intake_constants.LEFT_PIVOT_ID,
+            intake_constants.ROLLER_ID,
+            intake_constants.RIGHT_PIVOT_INVERTED,
+            intake_constants.LEFT_PIVOT_INVERTED
         )
+
+        self.shooter_subsystem = ShooterSubsystem(
+            shooter_constansts.FLYWHEEL_ID,
+            shooter_constansts.INDEXER_ID,
+            shooter_constansts.FLYWHEEL_INVERTED,
+            shooter_constansts.INDEXER_INVERTED
+        )
+
+
+        CommandXboxController.getRightX = self.deadband_wrapper(CommandXboxController.getRightX)
+        CommandXboxController.getRightY = self.deadband_wrapper(CommandXboxController.getRightY)
+        CommandXboxController.getLeftX = self.deadband_wrapper(CommandXboxController.getLeftX)
+        CommandXboxController.getLeftY = self.deadband_wrapper(CommandXboxController.getLeftY)
+
+        # Creating the drive controller on port 0 which is our team's standard
+        self.drive_controller =CommandXboxController(0)
+
+        # Creating the operator controller on port 1 which is our team's standard
+        self.op_controller = CommandXboxController(1)
+
+        # Configuring the controls for the robot
+        self.configure_bindings()
+
 
         if wpilib.RobotBase.isSimulation():
             # Initializing the mujoco simulation if the robot is being simulated
@@ -70,8 +95,34 @@ class Robot(wpilib.TimedRobot):
             analog_encoder_sim.setup_wrappers()
             relative_encoder_sim.setup_wrappers()
 
+    def configure_bindings(self) -> None:
+        # Setting the default command of the drive subsystem to be the drive command
+        # and passing the methods from the drive controller as parameters
+        self.drive_subsystem.setDefaultCommand(
+            self.drive_subsystem.get_drive_command(
+                self.drive_controller.getLeftY,
+                self.drive_controller.getLeftX,
+                self.drive_controller.getRightX
+            )
+        )
 
+        self.op_controller.a().whileTrue(
+            self.intake_subsystem.get_intake_command()
+        )
 
+        self.op_controller.b().onTrue(
+            self.intake_subsystem.get_pivot_command()
+        )
+
+    def deadband_wrapper(self, func: Callable[[CommandXboxController], float]):
+
+        def deadband():
+            if func() > 0.1:
+                return func()
+            else:
+                return 0
+
+        return deadband
 
     def robotPeriodic(self) -> None:
         CommandScheduler.getInstance().run()
