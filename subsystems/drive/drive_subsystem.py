@@ -1,5 +1,8 @@
+from sys import modules
 from typing import List
 from typing import Callable
+
+from wpilib._wpilib import SmartDashboard
 from wpimath.kinematics._kinematics import ChassisSpeeds
 from subsystems.drive.swerve_module import SwerveModule
 from commands2 import Subsystem
@@ -7,10 +10,6 @@ from commands2 import Command
 from phoenix6.hardware import Pigeon2
 from wpimath.kinematics import SwerveDrive4Kinematics
 from wpimath.geometry import Translation2d
-from wolverine_sim.rev.spark_max_simulation import spark_max_sim
-from wolverine_sim.rev.relative_encoder_simulation import relative_encoder_sim
-from wolverine_sim.phoenix6.pigeon2_simulation import pigeon2_sim
-from wolverine_sim.wpilib.analog_encoder_simulation import analog_encoder_sim
 import subsystems.drive.drive_constants as drive_constants
 import wpimath.kinematics
 import wpilib
@@ -40,18 +39,7 @@ class DriveSubsystem(Subsystem):
             Translation2d(-drive_constants.X_MODULE_TRANSLATION, -drive_constants.Y_MODULE_TRANSLATION),
         )
 
-        if wpilib.RobotBase.isSimulation():
 
-            # Iterating through all the modules and registering each device
-            for x in range(0, len(modules)):
-                spark_max_sim.register_device(modules[x].drive_motor.getDeviceId(), drive_constants.DRIVE_MUJOCO_IDS[x])
-                relative_encoder_sim.register_device(id(modules[x].drive_encoder), drive_constants.DRIVE_MUJOCO_IDS[x])
-
-                spark_max_sim.register_device(modules[x].steer_motor.getDeviceId(), drive_constants.STEER_MUJOCO_IDS[x])
-                analog_encoder_sim.register_device(modules[x].absolute_encoder.getChannel(), drive_constants.STEER_MUJOCO_IDS[x])
-
-            # Registering the gyro to simulation
-            pigeon2_sim.register_device(id(self.gyro), drive_constants.GYRO_MUJOCO_ID)
 
 
     def get_drive_command(
@@ -69,7 +57,11 @@ class DriveSubsystem(Subsystem):
         """
         # Creating and returning the command object using drive method
         return self.runOnce(
-            lambda: self.drive(ChassisSpeeds(vertical_supplier(), horizontal_supplier(), rotation_supplier()))
+            lambda: self.drive(ChassisSpeeds(
+                vertical_supplier() * drive_constants.MAX_SPEED,
+                horizontal_supplier() * drive_constants.MAX_SPEED,
+                rotation_supplier() * drive_constants.MAX_ANGULAR_VELOCITY,
+            ))
         )
 
     def drive(self, target_speed: wpimath.kinematics.ChassisSpeeds):
@@ -79,6 +71,11 @@ class DriveSubsystem(Subsystem):
         :return:
         """
         target_states = self.kinematics.toSwerveModuleStates(target_speed)
+        SmartDashboard.putNumber("Target Speed", target_states[0].speed)
+        SmartDashboard.putNumber("Current Speed", modules[0]._get_module_speed())
+
+
+
         for x in range(0, len(self.modules)):
             self.modules[x].set_state(target_states[x])
 

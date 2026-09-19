@@ -25,11 +25,17 @@ class SwerveModule():
 
         # Creating objects form the drive and steer motor in the module
         self.drive_motor = rev.SparkMax(drive_motor_id, rev.SparkLowLevel.MotorType.kBrushless)
+        drive_config = rev.SparkMaxConfig()
+        drive_config.smartCurrentLimit(drive_constants.DRIVE_CURRENT_LIMIT, drive_constants.DRIVE_CURRENT_LIMIT)
+        self.drive_motor.configure(drive_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
+
+
         self.steer_motor = rev.SparkMax(steer_motor_id, rev.SparkLowLevel.MotorType.kBrushless)
 
         # Creating the absolute encoder with the correct port, max input, and offset
         self.analog_input = wpilib.AnalogInput(encoder_id)
         self.absolute_encoder = wpilib.AnalogEncoder(self.analog_input, 360, encoder_offset)
+        self.absolute_encoder.setInverted(True)
 
         # Getting the relative encoder object form the drive motor
         self.drive_encoder = self.drive_motor.getEncoder()
@@ -47,6 +53,8 @@ class SwerveModule():
             drive_constants.STEER_KD
         )
 
+        self.steer_pid.enableContinuousInput(0, 360)
+
 
     def set_state(self, target_state: wpimath.kinematics.SwerveModuleState) -> None:
         """
@@ -56,7 +64,7 @@ class SwerveModule():
         """
         # Getting the target speed and angle from the target state object
         target_speed: float = target_state.speed
-        target_angle: float = target_state.angle.degrees() + 180 # Absolute encoder goes from 0 -> 360
+        target_angle: float = -target_state.angle.degrees() + 180 # Absolute encoder goes from 0 -> 360
 
         # Setting the drive and steer motors with value calculated from the PID controllers
         self.drive_motor.set(
@@ -81,5 +89,5 @@ class SwerveModule():
         """
         return (
             # Converting the encoder reading from RPM -> Meters per Sec using wheel radius
-            self.drive_encoder.getVelocity() * (2 * math.pi / 60) * drive_constants.wheel_radius
+            self.drive_encoder.getVelocity() * (2 * math.pi / 60) * drive_constants.WHEEL_RADIUS
         )

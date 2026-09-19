@@ -7,14 +7,21 @@ from subsystems.intake import intake_constants
 from subsystems.intake.intake_subsystem import IntakeSubsystem
 from subsystems.shooter.shooter_subsystem import ShooterSubsystem
 from subsystems.shooter import shooter_constansts
-from wolverine_sim.robot_simulation import rs
-from wolverine_sim.rev.spark_max_simulation import spark_max_sim
-from wolverine_sim.phoenix6.pigeon2_simulation import pigeon2_sim
-from wolverine_sim.wpilib.analog_encoder_simulation import analog_encoder_sim
-from wolverine_sim.rev.relative_encoder_simulation import relative_encoder_sim
 from typing import Callable
 import subsystems.drive.drive_constants as drive_constants
 import wpilib
+
+
+def deadband_wrapper(func: Callable[[CommandXboxController], float]):
+
+    def deadband(self: CommandXboxController):
+        if func() > 0.1:
+            return func()
+        else:
+            return 0
+
+    return deadband
+
 
 class Robot(wpilib.TimedRobot):
 
@@ -69,14 +76,13 @@ class Robot(wpilib.TimedRobot):
             shooter_constansts.INDEXER_INVERTED
         )
 
-
-        CommandXboxController.getRightX = self.deadband_wrapper(CommandXboxController.getRightX)
-        CommandXboxController.getRightY = self.deadband_wrapper(CommandXboxController.getRightY)
-        CommandXboxController.getLeftX = self.deadband_wrapper(CommandXboxController.getLeftX)
-        CommandXboxController.getLeftY = self.deadband_wrapper(CommandXboxController.getLeftY)
+        # CommandXboxController.getRightX = deadband_wrapper(CommandXboxController.getRightX)
+        # CommandXboxController.getRightY = deadband_wrapper(CommandXboxController.getRightY)
+        # CommandXboxController.getLeftX = deadband_wrapper(CommandXboxController.getLeftX)
+        # CommandXboxController.getLeftY = deadband_wrapper(CommandXboxController.getLeftY)
 
         # Creating the drive controller on port 0 which is our team's standard
-        self.drive_controller =CommandXboxController(0)
+        self.drive_controller = CommandXboxController(0)
 
         # Creating the operator controller on port 1 which is our team's standard
         self.op_controller = CommandXboxController(1)
@@ -85,15 +91,6 @@ class Robot(wpilib.TimedRobot):
         self.configure_bindings()
 
 
-        if wpilib.RobotBase.isSimulation():
-            # Initializing the mujoco simulation if the robot is being simulated
-            rs.initialize("robot/scene.xml")
-
-            # Setting up the wrappers for all the devices used on the robot
-            spark_max_sim.setup_wrappers()
-            pigeon2_sim.setup_wrappers()
-            analog_encoder_sim.setup_wrappers()
-            relative_encoder_sim.setup_wrappers()
 
     def configure_bindings(self) -> None:
         # Setting the default command of the drive subsystem to be the drive command
@@ -114,15 +111,12 @@ class Robot(wpilib.TimedRobot):
             self.intake_subsystem.get_pivot_command()
         )
 
-    def deadband_wrapper(self, func: Callable[[CommandXboxController], float]):
+        self.op_controller.rightBumper().whileTrue(
+            self.shooter_subsystem.get_shoot_command(
+                shooter_constansts.FLYWHEEL_SPEED
+            )
+        )
 
-        def deadband():
-            if func() > 0.1:
-                return func()
-            else:
-                return 0
-
-        return deadband
 
     def robotPeriodic(self) -> None:
         CommandScheduler.getInstance().run()
@@ -130,10 +124,4 @@ class Robot(wpilib.TimedRobot):
     def teleopPeriodic(self) -> None:
         pass
 
-    def _simulationInit(self) -> None:
-        # Starting the simulation
-        rs.start()
 
-    def _simulationPeriodic(self) -> None:
-        # Moving the simulation forward by 1 step
-        rs.step()

@@ -1,7 +1,7 @@
 import commands2
 from commands2 import Subsystem
 from commands2 import Command
-import intake_constants
+import subsystems.intake.intake_constants as intake_constants
 import rev
 
 class IntakeSubsystem(Subsystem):
@@ -35,7 +35,7 @@ class IntakeSubsystem(Subsystem):
 
         self.right_pivot_motor.configure(right_pivot_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
         self.left_pivot_motor.configure(left_pivot_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
-        self.roller_id.configure(roller_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
+        self.roller_motor.configure(roller_config, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
 
 
 
@@ -58,7 +58,14 @@ class IntakeSubsystem(Subsystem):
     def spin_rollers(self) -> None:
         self.roller_motor.set(intake_constants.ROLLER_SPEED)
 
+    def stop_rollers(self) -> None:
+        self.roller_motor.set(0)
+
     def get_intake_command(self) -> Command:
-        return self.runOnce(
-            lambda: self.spin_rollers()
+        return commands2.FunctionalCommand(
+            lambda *args: None,
+            lambda: self.spin_rollers(),
+            lambda: self.stop_rollers(),
+            lambda *args: None,
+            self
         )
